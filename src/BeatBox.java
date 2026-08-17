@@ -2,6 +2,8 @@ import javax.sound.midi.*;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import static javax.sound.midi.ShortMessage.*;
 
 public class BeatBox {
@@ -11,11 +13,11 @@ public class BeatBox {
     private Sequence sequence;
     private Track track;
 
-    int[] instruments = {35, 42, 46, 38, 49, 39, 50, 60, 70, 72, 64, 56, 58, 47, 67, 63};
     String[] instrumentNames = {"Bass Drum", "Closed Hi-Hat",
             "Open Hi-Hat", "Acoustic Snare", "Crash Cymbal", "Hand Clap",
             "High Tom", "Hi Bongo", "Maracas", "Whistle", "Low Conga",
             "Cowbell", "Vibraslap", "Low-mid Tom", "High Agogo", "Open Hi Conga"};
+    int[] instruments = {35, 42, 46, 38, 49, 39, 50, 60, 70, 72, 64, 56, 58, 47, 67, 63};
 
     public static void main(String[] args) {
         new BeatBox().buildGUI();
@@ -34,23 +36,23 @@ public class BeatBox {
         Box buttonBox = new Box(BoxLayout.Y_AXIS);
 
         JButton start = new JButton("Start");
-        start.addActionListener(e -> System.out.println("start"));
+        start.addActionListener(e -> System.out.println("Start"));
         buttonBox.add(start);
 
         JButton stop = new JButton("Stop");
-        stop.addActionListener(e -> System.out.println("stop"));
+        stop.addActionListener(e -> sequencer.stop());
         buttonBox.add(stop);
 
         JButton upTempo = new JButton("Tempo Up");
-        upTempo.addActionListener(e -> System.out.println("tempo up"));
+        upTempo.addActionListener(e -> changeTempo(1.03f));
         buttonBox.add(upTempo);
 
         JButton downTempo = new JButton("Tempo Down");
-        downTempo.addActionListener(e -> System.out.println("tempo down"));
+        downTempo.addActionListener(e -> changeTempo(0.97f));
         buttonBox.add(downTempo);
 
-        JButton reset = new JButton("Reset");
-        reset.addActionListener(e -> System.out.println("reset"));
+        JButton reset = new JButton("Tempo Reset");
+        reset.addActionListener(e -> changeTempo(1.0f));
         buttonBox.add(reset);
 
         Box nameBox = new Box(BoxLayout.Y_AXIS);
@@ -84,14 +86,71 @@ public class BeatBox {
             mainPanel.add(c);
 
         }
+        
 
-//        setUpMidi(); Need a method
+        setUpMidi();
 
         frame.setBounds(50, 50, 300, 300);
         frame.pack();
         frame.setVisible(true);
 
     }
+
+    private void setUpMidi() {
+
+        try {
+
+            sequencer = MidiSystem.getSequencer();
+            sequencer.open();
+            sequence = new Sequence(Sequence.PPQ, 4);
+            track = sequence.createTrack();
+            sequencer.setTempoInBPM(120);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+    }
+
+    private void changeTempo(float tempoMultiplier) {
+
+        float tempoFactor = sequencer.getTempoFactor();
+        if (tempoMultiplier == 1.0f) {
+            sequencer.setTempoFactor(tempoMultiplier);
+        }
+        else {
+            sequencer.setTempoFactor(tempoFactor * tempoMultiplier);
+        }
+
+
+    }
+
+    public static MidiEvent makeEvent(int cmd, int chnl, int one, int two, int tick) {
+
+        MidiEvent event = null;
+
+        try {
+
+            ShortMessage msg = new ShortMessage();
+            msg.setMessage(cmd, chnl, one, two);
+            event = new MidiEvent(msg, tick);
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+        return event;
+
+    }
+
+
+
+
+
 
 
 
