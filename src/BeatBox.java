@@ -36,7 +36,7 @@ public class BeatBox {
         Box buttonBox = new Box(BoxLayout.Y_AXIS);
 
         JButton start = new JButton("Start");
-        start.addActionListener(e -> System.out.println("Start"));
+        start.addActionListener(e -> buildTrackAndStart());
         buttonBox.add(start);
 
         JButton stop = new JButton("Stop");
@@ -153,6 +153,68 @@ public class BeatBox {
 
 
 
+    private void buildTrackAndStart() {
+
+        int[] trackList;
+
+        sequence.deleteTrack(track);
+        track = sequence.createTrack();
+
+        for (int i = 0; i < 16; i++) {
+
+            trackList = new int[16];
+            int key = instruments[i];
+
+
+            for (int j = 0; j < 16; j++) {
+
+                JCheckBox jc = checkboxList.get(j + 16 * i);
+                System.out.println("jc.isSelected() "+(j + 16 *i) + jc.isSelected());
+                if (jc.isSelected()) {
+                    trackList[j] = key;
+                    System.out.println(Arrays.toString(trackList));
+                } else {
+                    trackList[j] = 0;
+                }
+
+            }
+
+            makeTracks(trackList);
+            track.add(makeEvent(CONTROL_CHANGE, 1, 127, 0, 16));
+
+        }
+
+        track.add(makeEvent(PROGRAM_CHANGE, 9, 1, 0, 15));
+
+        try {
+
+            sequencer.setSequence(sequence);
+            sequencer.setLoopCount(sequencer.LOOP_CONTINUOUSLY);
+            sequencer.setTempoInBPM(120);
+            sequencer.start();
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+        }
+
+    }
+
+    private void makeTracks(int[] list) {
+
+        for (int i = 0; i < 16; i++) {
+
+            int key = list[i];
+
+            if (key != 0) {
+                track.add(makeEvent(NOTE_ON, 9, key, 100, i));
+                track.add(makeEvent(NOTE_OFF, 9, key, 100, i + 2));
+            }
+
+        }
+
+    }
 
 
 
